@@ -257,15 +257,18 @@
         // 读取第一块数据进行判断
         const { value, done } = await reader.read();
         if (!done) {
-            buffer += decoder.decode(value, { stream: true });
+            buffer = decoder.decode(value, { stream: true });
+            console.log("响应内容:", buffer);
   
             if (buffer.startsWith('data:')) {
-              buffer_ = buffer.substring(5).trim(); // 去掉"data:"及其后的空格，留下JSON部分
+              buffer_ = buffer.substring(5).trim(); 
+              
+              // 去掉"data:"及其后的空格，留下JSON部分
           } else if (buffer.includes('"error":')) { // 检查是否包含错误信息
               try {
                   const jsonData = JSON.parse(buffer);
                   if (jsonData.error) {
-                      console.log("发现接口错误信息，将返回错误内容", buffer);
+                      console.log("发现接口错误信息，将返回错误内容:", buffer,"\n----------------------------------");
                       
                       // 创建并返回错误信息的Response对象
                       const response = new Response(JSON.stringify(jsonData), {
@@ -276,7 +279,7 @@
                   }
               } catch (err) {
                   console.error('Error parsing JSON:', err);
-                  console.log("接口返回信息：", buffer);
+                  console.log("出错时接口返回的内容：", buffer,"\n----------------------------------");
               }
           }
   
@@ -290,7 +293,7 @@
                 }
             } catch (err) {
                 console.error('Error parsing JSON:', err);
-                console.log("接口返回信息：", buffer);
+                console.log("出错时接口返回的信息：", buffer,"\n----------------------------------");
             }
   
             if (shouldDirectlyReturn) {
