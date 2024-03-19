@@ -251,7 +251,7 @@
         const reader = openAIResponse.body.getReader();
         const decoder = new TextDecoder();
         let buffer = "";
-        let buffer_ = "";
+        let buffer_;
         let shouldDirectlyReturn = true; // 默认直接返回
   
         // 读取第一块数据进行判断
@@ -261,7 +261,23 @@
             console.log("响应内容:", buffer);
   
             if (buffer.startsWith('data:')) {
-              buffer_ = buffer.substring(5).trim(); 
+              // 计算buffer中'data:'出现的次数
+              let dataCount = buffer.split('data:').length - 1;
+
+              // 检查data:的数量，以确定如何处理
+              if (dataCount > 1) {
+                // 如果有多个data:，只取第一个data:及其后的内容
+                let firstDataIndex = buffer.indexOf('data:');
+                let bufferAfterFirstData = buffer.substring(firstDataIndex + 'data:'.length);
+                // 取第二个data:之前的内容（即第一个data:带的内容）
+                let secondDataIndex = bufferAfterFirstData.indexOf('data:');
+                buffer_ = bufferAfterFirstData.substring(0, secondDataIndex).trim();
+              } else {
+                // 如果只有一个data:，直接去除data:和头尾空格
+                buffer_ = buffer.replace('data:', '').trim();
+              }
+
+              console.log("处理后的buffer_内容:", buffer_);
               
               // 去掉"data:"及其后的空格，留下JSON部分
           } else if (buffer.includes('"error":')) { // 检查是否包含错误信息
@@ -293,7 +309,7 @@
                 }
             } catch (err) {
                 console.error('Error parsing JSON:', err);
-                console.log("出错时接口返回的信息：", buffer,"\n----------------------------------");
+                console.log("出错时接口返回的信息：", buffer_,"\n----------------------------------");
             }
   
             if (shouldDirectlyReturn) {
